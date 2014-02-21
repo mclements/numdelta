@@ -39,21 +39,34 @@ numDeltaMethod <- function(object,fun,...) {
 }
 predictnl <- function (object, ...) 
   UseMethod("predictnl")
-predictnl.default <- function(object,fun,newdata=NULL,...)
+predictnl.default <- function(object,fun,...)
   {
     ## link=c(I,log,sqrt),invlink=NULL
     ## link <- match.arg(link)
     ## if (is.null(invlink))
     ## invlink <- switch(deparse(substitute(link)),I=I,log=exp,sqrt=function(x) x^2)
-    if (is.null(newdata) && !is.null(object$data))
-      newdata <- object$data
     localf <- function(coef,...)
       {
         object$coefficients = coef
         fun(object,...)
       }
-    numDeltaMethod(object,localf,newdata=newdata,...)
+    numDeltaMethod(object,localf,...)
   }
+## predictnl.default <- function(object,fun,newdata=NULL,...)
+##   {
+##     ## link=c(I,log,sqrt),invlink=NULL
+##     ## link <- match.arg(link)
+##     ## if (is.null(invlink))
+##     ## invlink <- switch(deparse(substitute(link)),I=I,log=exp,sqrt=function(x) x^2)
+##     if (is.null(newdata) && !is.null(object$data))
+##       newdata <- object$data
+##     localf <- function(coef,...)
+##       {
+##         object$coefficients = coef
+##         fun(object,...)
+##       }
+##     numDeltaMethod(object,localf,newdata=newdata,...)
+##   }
 ## setMethod("predictnl", "mle", function(object,fun,...)
 ##   {
 ##     localf <- function(coef,...)

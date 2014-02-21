@@ -1,0 +1,12 @@
+Package: numdelta
+Type: Package
+Title: Numerical delta method
+Version: 1.0.0
+Date: 2011-10-25
+Depends: 
+Imports: stats
+Author: Mark Clements. 
+Maintainer: <mark.clements@ki.se>
+Description: Numerical delta method
+License: GPL-2
+LazyLoad: yes

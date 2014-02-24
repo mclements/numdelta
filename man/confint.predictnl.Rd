@@ -8,7 +8,7 @@ confint method for a predictnl object.
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-confint.predictnl(object, parm, level = 0.95)
+\method{confint}{predictnl}(object, parm, level = 0.95, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

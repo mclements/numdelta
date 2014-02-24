@@ -2,11 +2,12 @@ Package: numdelta
 Type: Package
 Title: Numerical delta method
 Version: 1.0.0
-Date: 2011-10-25
-Depends: 
-Imports: stats
+Date: 2014-02-26
+Depends: stats4,bbmle
+Imports: stats,methods
+Suggests: splines,survival
 Author: Mark Clements. 
 Maintainer: <mark.clements@ki.se>
-Description: Numerical delta method
-License: GPL-2
+Description: Variance estimation using the numerical delta method.
+License: GPL (>= 2)
 LazyLoad: yes

@@ -35,7 +35,7 @@ numDeltaMethod <- function(object,fun,...) {
   structure(list(fit = fit, se.fit = se.fit), # vcov=Sigma,
             class="predictnl")
 }
-confint.predictnl <- function(object,parm,level=0.95) {
+confint.predictnl <- function(object,parm,level=0.95,...) {
     cf <- object$fit
     pnames <- names(cf)
     if (is.null(pnames))

@@ -1,9 +1,3 @@
-## package.skeleton(name="Rstpm2", path="c:/usr/src/R", force=T, namespace=T, code_files="pm2-3.R")
-## Rtools.bat
-## R CMD INSTALL "c:/usr/src/R/numdelta"
-## R CMD build "c:/usr/src/R/numdelta"
-## R CMD build --binary "c:/usr/src/R/numdelta"
-
 ## numerically calculate the gradient (func may return a vector)
 grad <- function(func,x,...) # would shadow numDeriv::grad()
   {
@@ -27,68 +21,100 @@ grad <- function(func,x,...) # would shadow numDeriv::grad()
       }
     return(df)
   }
+
 ## fun: takes coef as its first argument
 ## requires: coef() and vcov() on the object
 numDeltaMethod <- function(object,fun,...) {
   coef <- coef(object)
-  est <- fun(coef,...)
   Sigma <- vcov(object)
+  fit <- fun(coef,...)
   gd <- grad(fun,coef,...)
-  se.est <- as.vector(sqrt(diag(t(gd) %*% Sigma %*% gd)))
-  data.frame(Estimate = est, SE = se.est)
+  se.fit <- as.vector(sqrt(diag(t(gd) %*% Sigma %*% gd)))
+  names(se.fit) <- names(fit)
+  if(all(se.fit==0)) warning("Zero variance estimated. Do you need to pass a newdata argument to fun()?")
+  structure(list(fit = fit, se.fit = se.fit), # vcov=Sigma,
+            class="predictnl")
 }
+confint.predictnl <- function(object,parm,level=0.95) {
+    cf <- object$fit
+    pnames <- names(cf)
+    if (is.null(pnames))
+        pnames <- 1:length(cf)
+    if (missing(parm)) 
+        parm <- pnames
+    else if (is.numeric(parm)) 
+        parm <- pnames[parm]
+    a <- (1 - level)/2
+    a <- c(a, 1 - a)
+    pct <- stats:::format.perc(a, 3)
+    fac <- qnorm(a)
+    ci <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm, 
+        pct))
+    ses <- object$se.fit[parm]
+    ci[] <- cf[parm] + ses %o% fac
+    ci
+}
+print.predictnl <- function(x, ...)
+    print(structure(x,class=NULL),...)
 predictnl <- function (object, ...) 
   UseMethod("predictnl")
-predictnl.default <- function(object,fun,...)
+`coef<-` <- function(obj,value) UseMethod("coef<-")
+`coef<-.default` <- function(obj,value) {
+    obj$coefficients <- value
+    obj
+}
+`coef<-.mle` <- `coef<-.mle2` <- function(obj,value) {
+    obj@fullcoef <- value
+    obj
+}
+`coef<-.aov` <- function(obj,value) {
+    obj$coefficients[!is.na(obj$coefficients)] <- value
+    obj
+}
+`coef<-.Arima` <- function(obj,value) {
+    obj$coef <- value
+    obj
+}
+
+
+predictnl.default <- function(object,fun,newdata=NULL,...)
   {
-    ## link=c(I,log,sqrt),invlink=NULL
-    ## link <- match.arg(link)
-    ## if (is.null(invlink))
-    ## invlink <- switch(deparse(substitute(link)),I=I,log=exp,sqrt=function(x) x^2)
-    localf <- function(coef,...)
-      {
-        object$coefficients = coef
-        fun(object,...)
+      if (!is.null(newdata) || "newdata" %in% names(formals(fun))) {
+          localf <- function(coef,newdata,...)
+              {
+                  coef(object) <- coef
+                  fun(object,newdata=newdata,...)
+              }
+          numDeltaMethod(object,localf,newdata=newdata, ...)
       }
-    numDeltaMethod(object,localf,...)
+      else {
+          localf <- function(coef,...)
+              {
+                  coef(object) <- coef
+                  fun(object,...)
+              }
+          numDeltaMethod(object,localf,...)
+      }
   }
-## predictnl.default <- function(object,fun,newdata=NULL,...)
-##   {
-##     ## link=c(I,log,sqrt),invlink=NULL
-##     ## link <- match.arg(link)
-##     ## if (is.null(invlink))
-##     ## invlink <- switch(deparse(substitute(link)),I=I,log=exp,sqrt=function(x) x^2)
-##     if (is.null(newdata) && !is.null(object$data))
-##       newdata <- object$data
-##     localf <- function(coef,...)
-##       {
-##         object$coefficients = coef
-##         fun(object,...)
-##       }
-##     numDeltaMethod(object,localf,newdata=newdata,...)
-##   }
-## setMethod("predictnl", "mle", function(object,fun,...)
-##   {
-##     localf <- function(coef,...)
-##       {
-##         object@fullcoef = coef # changed from predictnl.default()
-##         fun(object,...)
-##       }
-##     numDeltaMethod(object,localf,...)
-##   })
-predictnl.glm <- function(object,fun,newdata=NULL,...)
+setMethod("predictnl", "mle", function(object,fun,...)
+          predictnl.default(object, fun, ...))
+setMethod("predictnl", "mle2", function(object,fun,...)
+          predictnl.default(object, fun, ...))
+predictnl.lm <- function(object,fun,newdata=NULL,...)
   {
-    ## stopifnot(require(stats))
-    if (is.null(newdata) && !is.null(object$data))
-      newdata <- object$data
-    localf <- function(coef,...)
-      {
-        object$coefficients = coef
-        fun(object,...)
-      }
-    numDeltaMethod(object,localf,newdata=newdata,...)
+    ## Corner case: fun=predict with no newdata
+    ##
+    if (is.null(newdata) && "newdata" %in% names(formals(fun))) {
+        stopifnot(!is.null(object$data))
+        newdata <- object$data
+    }
+    predictnl.default(object,fun,newdata,...)
   }
 
-if (FALSE) {
-  try(detach("package:numdelta",unload=TRUE),silent=TRUE)
+predict.lm <- function(object,newdata=NULL,...) {
+    if (is.null(newdata)) {
+        stopifnot(!is.null(object$data))
+        newdata <- object$data
+    }
+    stats::predict(object,newdata,...)
 }

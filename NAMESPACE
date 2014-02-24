@@ -1,3 +1,5 @@
 ##exportPattern("^[[:alpha:]]+")
-export("numDeltaMethod","predictnl","predictnl.glm","predictnl.default")
-importFrom(stats,glm)
+export("numDeltaMethod","predictnl","predictnl.default","predictnl.lm",
+       "confint.predictnl","print.predictnl")
+importFrom(stats,glm,lm)
+importFrom(stats4,mle)

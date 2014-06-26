@@ -29,7 +29,7 @@ numDeltaMethod <- function(object,fun,...) {
   Sigma <- vcov(object)
   fit <- fun(coef,...)
   gd <- grad(fun,coef,...)
-  se.est <- as.vector(sqrt(diag(colSums(gd* (Sigma %*% gd)))))
+  se.est <- as.vector(sqrt(colSums(gd* (Sigma %*% gd))))
   names(se.fit) <- names(fit)
   if(all(se.fit==0)) warning("Zero variance estimated. Do you need to pass a newdata argument to fun()?")
   structure(list(fit = fit, se.fit = se.fit), # vcov=Sigma,
@@ -51,7 +51,7 @@ confint.predictnl <- function(object,parm,level=0.95,...) {
     ci <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm, 
         pct))
     ses <- object$se.fit[parm]
-    ci[] <- cf[parm] + ses %o% fac
+    ci[] <- as.vector(cf[parm]) + ses %o% fac
     ci
 }
 print.predictnl <- function(x, ...)

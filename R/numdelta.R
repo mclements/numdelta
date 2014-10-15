@@ -29,8 +29,9 @@ numDeltaMethod <- function(object,fun,...) {
   Sigma <- vcov(object)
   fit <- fun(coef,...)
   gd <- grad(fun,coef,...)
-  se.est <- as.vector(sqrt(colSums(gd* (Sigma %*% gd))))
-  names(se.fit) <- names(fit)
+  se.fit <- as.vector(sqrt(colSums(gd* (Sigma %*% gd))))
+  if (!is.null(names(fit)))
+      names(se.fit) <- names(fit)
   if(all(se.fit==0)) warning("Zero variance estimated. Do you need to pass a newdata argument to fun()?")
   structure(list(fit = fit, se.fit = se.fit), # vcov=Sigma,
             class="predictnl")
